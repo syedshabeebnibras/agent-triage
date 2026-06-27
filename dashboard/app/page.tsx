@@ -21,6 +21,7 @@ const CATEGORY_OWNER: Record<string, Owner> = {
   VERIFICATION: "agent_framework",
   TOOL_USE: "agent_framework",
   RESOURCE_LIMIT: "agent_framework",
+  IMPLEMENTATION_STALL: "agent_framework",
   INFRA_ERROR: "environment",
   OTHER: "unknown",
 };
@@ -33,6 +34,7 @@ const CATEGORY_LABEL: Record<string, string> = {
   VERIFICATION: "Verification",
   TOOL_USE: "Tool use",
   RESOURCE_LIMIT: "Resource limit",
+  IMPLEMENTATION_STALL: "Implementation stall",
   INFRA_ERROR: "Infra error",
   OTHER: "Other",
 };
@@ -86,13 +88,13 @@ export default function Page() {
             <span className="brand-mark">
               agent<span className="dot">·</span>triage
             </span>
-            <span className="brand-sub">v0.1 · taxonomy 0.1.0</span>
+            <span className="brand-sub">v0.2 · taxonomy 0.2.0</span>
           </div>
           <nav className="masthead-meta">
             <a href="#distribution">distribution</a>
             <a href="#runs">runs</a>
             <a
-              href="https://github.com/"
+              href="https://github.com/syedshabeebnibras/agent-triage"
               target="_blank"
               rel="noreferrer"
             >
@@ -248,12 +250,15 @@ export default function Page() {
         </section>
 
         <footer>
-          Agent Triage — built as a working prototype of the failure-investigation
-          workflow for autonomous coding agents. Taxonomy v0.1.0 (a&nbsp;priori,
-          pending empirical validation against real run batches). Backend: Python /
-          FastAPI · deterministic signals + model-agnostic LLM classification ·
-          calibrated evaluation with Cohen&apos;s kappa and bootstrap CIs. ·{" "}
-          <a href="https://github.com/" target="_blank" rel="noreferrer">
+          Agent Triage — failure triage for autonomous coding agents. Taxonomy
+          v0.2.0 (empirically validated on 30 real OpenHands / SWE-bench runs,
+          κ=1.000). Backend: Python / FastAPI · deterministic signals +
+          model-agnostic LLM classification · Cohen&apos;s kappa evaluation. ·{" "}
+          <a
+            href="https://github.com/syedshabeebnibras/agent-triage"
+            target="_blank"
+            rel="noreferrer"
+          >
             source &amp; runbook
           </a>
         </footer>

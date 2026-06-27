@@ -20,8 +20,10 @@ In mock mode the auth gate is skipped — safe because no API credits are spent.
 
 from __future__ import annotations
 
+import json
 import os
 from collections import Counter
+from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -52,6 +54,39 @@ app.add_middleware(
 _provider = default_provider()
 _classifier = TriageClassifier(provider=_provider)
 _TRIAGE_API_KEY = os.getenv("TRIAGE_API_KEY")
+
+
+def _build_demo_cache() -> dict | None:
+    """Classify the bundled demo runs once at startup and cache the result.
+
+    The /triage/demo endpoint is public (no auth required) — it only ever
+    classifies this fixed set of 9 demo runs, so there are no LLM credits
+    exposed to arbitrary callers.
+    """
+    demo_path = Path("data/traces/demo_runs.jsonl")
+    if not demo_path.exists():
+        return None
+    try:
+        runs = [
+            AgentRun(**json.loads(line))
+            for line in demo_path.read_text().splitlines()
+            if line.strip()
+        ]
+        cards = [_classifier.classify(r) for r in runs]
+        dist: Counter[str] = Counter(c.primary_category for c in cards)
+        owners: Counter[str] = Counter(c.owner.value for c in cards)
+        return {
+            "count": len(cards),
+            "cards": [c.model_dump(mode="json") for c in cards],
+            "distribution": dict(dist),
+            "owner_distribution": dict(owners),
+            "mock_mode": _provider.name == "mock",
+        }
+    except Exception:
+        return None
+
+
+_demo_cache: dict | None = _build_demo_cache()
 
 _bearer = HTTPBearer(auto_error=False)
 
@@ -106,6 +141,26 @@ def taxonomy() -> dict:
             }
             for c in TAXONOMY.values()
         ],
+    }
+
+
+@app.get("/triage/demo")
+def triage_demo() -> dict:
+    """Public endpoint: pre-classified demo batch, cached at startup.
+
+    Classifies the bundled 9-run demo set exactly once (on container start) and
+    serves the cached result. No auth required — the fixed demo set is not a
+    credit-draining path.
+    """
+    if _demo_cache is not None:
+        return _demo_cache
+    # demo_runs.jsonl not present in this deployment; return empty batch
+    return {
+        "count": 0,
+        "cards": [],
+        "distribution": {},
+        "owner_distribution": {},
+        "mock_mode": _provider.name == "mock",
     }
 
 

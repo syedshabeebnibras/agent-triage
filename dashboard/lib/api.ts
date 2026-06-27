@@ -64,6 +64,7 @@ export const CATEGORY_ORDER = [
   "VERIFICATION",
   "TOOL_USE",
   "RESOURCE_LIMIT",
+  "IMPLEMENTATION_STALL",
   "INFRA_ERROR",
   "OTHER",
 ] as const;
@@ -88,15 +89,12 @@ export const OWNER_COLORS: Record<Owner, string> = {
 export async function fetchBatch(): Promise<BatchResponse> {
   if (API_BASE) {
     try {
-      const runs = await loadDemoRuns();
-      const res = await fetch(`${API_BASE}/triage/batch`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ runs }),
-      });
+      // /triage/demo is a public GET endpoint — the API classifies the bundled
+      // demo runs once at startup and serves the cached result. No auth required.
+      const res = await fetch(`${API_BASE}/triage/demo`);
       if (res.ok) return (await res.json()) as BatchResponse;
     } catch {
-      // fall through to demo cards
+      // fall through to bundled demo cards
     }
   }
   return demoBatch();
