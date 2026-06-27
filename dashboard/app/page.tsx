@@ -122,8 +122,8 @@ export default function Page() {
           {data?.mock_mode ? (
             <div className="banner">
               <span className="pulse" />
-              Illustrative sample data. Live API not connected. Real verdicts come
-              from the FastAPI backend with a real model.
+              Sample of real triaged runs (offline fallback). Live verdicts come
+              from the FastAPI backend with a live model.
             </div>
           ) : null}
         </section>
