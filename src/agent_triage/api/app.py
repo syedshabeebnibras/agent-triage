@@ -92,7 +92,7 @@ _bearer = HTTPBearer(auto_error=False)
 
 
 def _require_auth(
-    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer),
+    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer),  # noqa: B008
 ) -> None:
     """Gate for LLM-calling endpoints.
 

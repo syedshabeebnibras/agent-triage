@@ -17,7 +17,6 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -194,7 +193,7 @@ def run_instance(client: anthropic.Anthropic, instance: dict, workspace: str) ->
     history: list[dict] = []
     messages: list[dict] = [{"role": "user", "content": problem}]
 
-    for turn in range(MAX_TURNS):
+    for _turn in range(MAX_TURNS):
         response = client.messages.create(
             model=MODEL,
             max_tokens=4096,
