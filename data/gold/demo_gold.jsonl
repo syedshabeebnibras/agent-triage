@@ -1,0 +1,9 @@
+{"run_id":"oh-env-001","task_id":"pallets__flask-4992","true_category":"ENVIRONMENT","labeler":"fixture","notes":"py version lacks tomllib; install blocked"}
+{"run_id":"oh-infra-001","task_id":"django__django-15789","true_category":"INFRA_ERROR","labeler":"fixture","notes":"provider rate limit, no patch"}
+{"run_id":"oh-res-001","task_id":"sympy__sympy-21055","true_category":"RESOURCE_LIMIT","labeler":"fixture","notes":"hit iteration cap while exploring"}
+{"run_id":"oh-ctx-001","task_id":"scikit-learn__scikit-learn-13496","true_category":"CONTEXT_RETRIEVAL","labeler":"fixture","notes":"edited bagging.py instead of _iforest.py"}
+{"run_id":"oh-reason-001","task_id":"django__django-11099","true_category":"REASONING","labeler":"fixture","notes":"right file, subtly wrong regex anchor logic"}
+{"run_id":"oh-verify-001","task_id":"matplotlib__matplotlib-23987","true_category":"VERIFICATION","labeler":"fixture","notes":"finished without ever running tests"}
+{"run_id":"oh-tool-001","task_id":"psf__requests-2317","true_category":"TOOL_USE","labeler":"fixture","notes":"patch repeatedly fails to apply; thrashing"}
+{"run_id":"oh-scope-001","task_id":"internal__ticket-8842","true_category":"SCOPING","labeler":"fixture","notes":"vague spec; agent optimized the wrong layer"}
+{"run_id":"oh-other-001","task_id":"astropy__astropy-14182","true_category":"OTHER","labeler":"fixture","notes":"mixed failures + truncated evidence"}

@@ -1,0 +1,11 @@
+# Render blueprint for the backend API.
+services:
+  - type: web
+    name: agent-triage-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false   # set in the Render dashboard; demo runs in mock mode without it
+    healthCheckPath: /health

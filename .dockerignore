@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+dashboard/node_modules/
+dashboard/.next/
+.git/
+*.egg-info/
+htmlcov/
+.coverage
+eval_report.json
+cards.jsonl

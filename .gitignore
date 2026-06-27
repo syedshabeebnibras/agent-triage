@@ -1,0 +1,37 @@
+# python
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+
+# node
+dashboard/node_modules/
+dashboard/.next/
+dashboard/out/
+
+# secrets
+.env
+.env.local
+
+# generated artifacts
+eval_report.json
+eval_half_a.json
+eval_half_b.json
+cards.jsonl
+data/traces/real_*.jsonl
+data/gold/real_*.jsonl
+output.jsonl
+
+# openhands workspace (large embedded repo, not part of the package)
+openhands-eval/
+
+# openhands venvs (created during eval runs)
+.venv-oh029/
+.venv-openhands/
+.venv-*/
