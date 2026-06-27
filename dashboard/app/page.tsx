@@ -108,21 +108,21 @@ export default function Page() {
         <section className="hero">
           <div className="eyebrow">root-cause analysis for autonomous coding agents</div>
           <h1>
-            When an agent run fails, the question isn&apos;t <em>did it fail</em> —
-            it&apos;s <em>why</em>, <em>who fixes it</em>, and <em>how to stop the
+            When an agent run fails, the question is not <em>did it fail</em>.
+            It is <em>why</em>, <em>who fixes it</em>, and <em>how to stop the
             whole class</em>.
           </h1>
           <p>
-            Agent Triage ingests a failed Devin / OpenHands / SWE-agent run,
+            Agent Triage ingests a failed Devin, OpenHands, or SWE-agent run,
             classifies the failure against an ownership-tagged taxonomy, grounds the
-            verdict in specific trajectory steps, and emits a reusable playbook card —
-            the exact artifact a support engineer attaches when escalating to
+            verdict in specific trajectory steps, and produces a reusable playbook card.
+            That card is the exact artifact a support engineer attaches when escalating to
             engineering or educating a customer.
           </p>
           {data?.mock_mode ? (
             <div className="banner">
               <span className="pulse" />
-              illustrative sample data — live API not connected. Real verdicts come
+              Illustrative sample data. Live API not connected. Real verdicts come
               from the FastAPI backend with a real model.
             </div>
           ) : null}
@@ -250,16 +250,16 @@ export default function Page() {
         </section>
 
         <footer>
-          Agent Triage — failure triage for autonomous coding agents. Taxonomy
-          v0.2.0 (empirically validated on 30 real OpenHands / SWE-bench runs,
-          κ=1.000). Backend: Python / FastAPI · deterministic signals +
-          model-agnostic LLM classification · Cohen&apos;s kappa evaluation. ·{" "}
+          Agent Triage is a failure triage system for autonomous coding agents.
+          Taxonomy v0.2.0, empirically validated on 30 real OpenHands and SWE-bench
+          runs (κ=1.000). Backend: Python and FastAPI with deterministic signals,
+          model-agnostic LLM classification, and Cohen&apos;s kappa evaluation.{" "}
           <a
             href="https://github.com/syedshabeebnibras/agent-triage"
             target="_blank"
             rel="noreferrer"
           >
-            source &amp; runbook
+            Source and runbook
           </a>
         </footer>
       </div>

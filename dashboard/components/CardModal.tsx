@@ -73,7 +73,7 @@ export function CardModal({
           <h4>Recommended action</h4>
           <div className="action-box">{card.recommended_action}</div>
 
-          <h4>Prevention — class level</h4>
+          <h4>Prevention (class level)</h4>
           <div className="action-box">{card.prevention}</div>
         </div>
       </div>
