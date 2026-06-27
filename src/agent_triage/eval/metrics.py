@@ -72,8 +72,8 @@ def _cohens_kappa(pairs: list[tuple[str, str]]) -> float:
     labels = sorted({x for pair in pairs for x in pair})
     observed = _accuracy(pairs)
 
-    true_counts = defaultdict(int)
-    pred_counts = defaultdict(int)
+    true_counts: dict[str, int] = defaultdict(int)
+    pred_counts: dict[str, int] = defaultdict(int)
     for t, p in pairs:
         true_counts[t] += 1
         pred_counts[p] += 1

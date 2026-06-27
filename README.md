@@ -13,7 +13,8 @@ That card is the exact artifact a support / deployed engineer attaches when
 escalating to engineering or educating a customer.
 
 > **Status:** working prototype. The taxonomy is **v0.2.0 — empirically validated**
-> against 10 real SWE-bench Lite run trajectories. v0.2.0 added `IMPLEMENTATION_STALL`
+> against 30 real SWE-bench Lite run trajectories (Cohen's κ = 1.000 on the full gold
+> set; held-out half-split check shows no overfitting). v0.2.0 added `IMPLEMENTATION_STALL`
 > and tightened the `RESOURCE_LIMIT` / `ENVIRONMENT` rule-based classifier based on
 > observed false-positive patterns (see `docs/EVAL_NOTES.md`).
 
@@ -126,7 +127,7 @@ the adapter, hand-label a gold set, and run calibration.
 
 ## Deployment
 
-- **Dashboard → Vercel** (`dashboard/`, `vercel.json`). Set
+- **Dashboard → Vercel** (`dashboard/`, `dashboard/vercel.json`). Set
   `NEXT_PUBLIC_API_BASE` to the API URL, or leave unset to serve the bundled demo.
 - **API → Render / Fly.io / Docker** (`Dockerfile`, `render.yaml`). Set
   `ANTHROPIC_API_KEY` to leave mock mode.
