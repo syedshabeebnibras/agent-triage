@@ -35,3 +35,4 @@ openhands-eval/
 .venv-oh029/
 .venv-openhands/
 .venv-*/
+.vercel
