@@ -7,17 +7,25 @@ Endpoints:
   POST /triage/batch           -> classify many runs, return cards + distribution
   POST /stats                  -> distribution/calibration over a set of runs
 
-The service is provider-agnostic: it uses the ANTHROPIC_API_KEY if present, else
-the offline MockProvider (so the deployed demo runs even without a key, clearly
-labeled as mock).
+Authentication
+--------------
+When TRIAGE_API_KEY is set in the environment AND the server is running with a
+real LLM provider (not mock mode), the three LLM-calling endpoints require:
+
+    Authorization: Bearer <TRIAGE_API_KEY>
+
+/health and /taxonomy are always unauthenticated (no credits at risk).
+In mock mode the auth gate is skipped — safe because no API credits are spent.
 """
 
 from __future__ import annotations
 
+import os
 from collections import Counter
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
 
 from agent_triage import __version__
@@ -32,15 +40,38 @@ app = FastAPI(
     description="Failure triage and root-cause analysis for autonomous coding-agent runs.",
 )
 
+# CORS: allow all origins for the demo dashboard.
+# Tighten allow_origins to your dashboard domain for production.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # demo; tighten for production
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=["*"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 _provider = default_provider()
 _classifier = TriageClassifier(provider=_provider)
+_TRIAGE_API_KEY = os.getenv("TRIAGE_API_KEY")
+
+_bearer = HTTPBearer(auto_error=False)
+
+
+def _require_auth(
+    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer),
+) -> None:
+    """Gate for LLM-calling endpoints.
+
+    Skipped when no TRIAGE_API_KEY is configured (local dev / CI) or when
+    running in mock mode (no real API credits at stake).
+    """
+    if _TRIAGE_API_KEY is None or _provider.name == "mock":
+        return
+    if credentials is None or credentials.credentials != _TRIAGE_API_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing or invalid API key. Set Authorization: Bearer <TRIAGE_API_KEY>.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
 
 class BatchRequest(BaseModel):
@@ -55,6 +86,7 @@ def health() -> dict:
         "provider": _provider.name,
         "mock_mode": _provider.name == "mock",
         "taxonomy_version": TAXONOMY_VERSION,
+        "auth_required": _TRIAGE_API_KEY is not None and _provider.name != "mock",
     }
 
 
@@ -77,13 +109,13 @@ def taxonomy() -> dict:
     }
 
 
-@app.post("/triage")
+@app.post("/triage", dependencies=[Depends(_require_auth)])
 def triage(run: AgentRun) -> dict:
     card = _classifier.classify(run)
     return {"card": card.model_dump(mode="json"), "markdown": card.to_markdown()}
 
 
-@app.post("/triage/batch")
+@app.post("/triage/batch", dependencies=[Depends(_require_auth)])
 def triage_batch(req: BatchRequest) -> dict:
     cards = [_classifier.classify(r) for r in req.runs]
     dist: Counter[str] = Counter(c.primary_category for c in cards)
@@ -97,7 +129,7 @@ def triage_batch(req: BatchRequest) -> dict:
     }
 
 
-@app.post("/stats")
+@app.post("/stats", dependencies=[Depends(_require_auth)])
 def stats(req: BatchRequest) -> dict:
     cards = [_classifier.classify(r) for r in req.runs]
     dist: Counter[str] = Counter(c.primary_category for c in cards)

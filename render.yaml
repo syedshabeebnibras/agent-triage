@@ -8,4 +8,6 @@ services:
     envVars:
       - key: ANTHROPIC_API_KEY
         sync: false   # set in the Render dashboard; demo runs in mock mode without it
+      - key: TRIAGE_API_KEY
+        sync: false   # bearer token for /triage /triage/batch /stats; required when ANTHROPIC_API_KEY is set
     healthCheckPath: /health
