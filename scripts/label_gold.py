@@ -31,7 +31,7 @@ def main() -> None:
     parser.add_argument("--labeler", default="human", help="Your name")
     args = parser.parse_args()
 
-    cards = [json.loads(l) for l in Path(args.cards_path).read_text().splitlines() if l.strip()]
+    cards = [json.loads(ln) for ln in Path(args.cards_path).read_text().splitlines() if ln.strip()]
     gold_path = Path(args.gold_path)
     gold_path.parent.mkdir(parents=True, exist_ok=True)
 
