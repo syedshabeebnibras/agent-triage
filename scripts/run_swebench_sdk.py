@@ -20,9 +20,13 @@ Output
 
 from __future__ import annotations
 
+import os
+
+# Must be set before any OpenHands SDK imports to suppress the startup banner
+os.environ["OPENHANDS_SUPPRESS_BANNER"] = "1"
+
 import argparse
 import json
-import os
 import subprocess
 import tempfile
 import time
@@ -38,8 +42,8 @@ from openhands.sdk.tool import ToolAnnotations as _ToolAnnotations
 from openhands.sdk.tool import ToolDefinition as _ToolDefinition
 from openhands.sdk.tool import ToolExecutor as _ToolExecutor
 
-OPENHANDS_SUPPRESS_BANNER = "1"
-os.environ.setdefault("OPENHANDS_SUPPRESS_BANNER", "1")
+# Mutable container so _BashExecutor can read the current workspace path
+_bash_cwd: list[str] = []
 
 
 class _BashAction(_Action):
@@ -54,6 +58,7 @@ class _BashObservation(_Observation):
 
 class _BashExecutor(_ToolExecutor):
     def __call__(self, action: _BashAction, conversation=None) -> _BashObservation:
+        cwd = _bash_cwd[0] if _bash_cwd else None
         try:
             result = subprocess.run(
                 action.command,
@@ -61,9 +66,10 @@ class _BashExecutor(_ToolExecutor):
                 capture_output=True,
                 text=True,
                 timeout=60,
-                cwd="/tmp",
+                cwd=cwd,
             )
-            out = (result.stdout or "") + (result.stderr or "")
+            prefix = f"[exit: {result.returncode}]\n"
+            out = prefix + (result.stdout or "") + (result.stderr or "")
             return _BashObservation.from_text(out[:4000] or "(no output)")
         except subprocess.TimeoutExpired:
             return _BashObservation.from_text("Error: command timed out after 60s")
@@ -142,6 +148,9 @@ def _run_instance(
             events.append({"type": type(event).__name__, "raw": str(event)})
 
     with tempfile.TemporaryDirectory() as workspace_dir:
+        # Point the bash tool at the actual workspace for this run
+        _bash_cwd.clear()
+        _bash_cwd.append(workspace_dir)
         try:
             workspace = LocalWorkspace(working_dir=workspace_dir)
             conv = LocalConversation(
