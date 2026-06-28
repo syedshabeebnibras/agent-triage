@@ -28,6 +28,7 @@ export interface TriageCard {
   owner: Owner;
   recommended_action: string;
   prevention: string;
+  fix_suggestion: string | null;
   taxonomy_version: string;
   provider: string;
 }

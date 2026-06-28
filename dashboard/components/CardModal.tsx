@@ -75,6 +75,13 @@ export function CardModal({
 
           <h4>Prevention (class level)</h4>
           <div className="action-box">{card.prevention}</div>
+
+          {card.fix_suggestion ? (
+            <>
+              <h4>Scaffold fix</h4>
+              <div className="action-box action-box--fix">{card.fix_suggestion}</div>
+            </>
+          ) : null}
         </div>
       </div>
     </div>

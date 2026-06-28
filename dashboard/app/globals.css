@@ -492,6 +492,11 @@ section.block {
   line-height: 1.55;
   color: var(--text);
 }
+.action-box--fix {
+  border-color: #3a4a2a;
+  background: #1a2212;
+  color: #a8c878;
+}
 
 /* ---- footer ---- */
 footer {

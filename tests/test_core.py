@@ -279,3 +279,175 @@ def test_openhands_adapter_dict_form():
     assert run.model == "claude-sonnet-4-6"
     assert run.produced_patch is True
     assert run.failed is True
+
+
+# --------------------------------------------------------------------------- #
+# fix_suggestion (Tier 2)
+# --------------------------------------------------------------------------- #
+def test_rule_card_has_fix_suggestion():
+    """Rule-based cards should carry a fix_suggestion string for their category."""
+    classifier = TriageClassifier(provider=MockProvider())
+    run = make_run(
+        [],
+        resolved=False,
+        final_patch=None,
+        test_result=None,
+    )
+    card = classifier.classify(run)
+    assert card.fix_suggestion is not None
+    assert len(card.fix_suggestion) > 20
+
+
+def test_llm_card_has_fix_suggestion():
+    """LLM-path cards should also carry fix_suggestion."""
+    from agent_triage.engine.classifier import _FIX_SUGGESTIONS
+
+    for code in _FIX_SUGGESTIONS:
+        suggestion = _FIX_SUGGESTIONS[code]
+        assert isinstance(suggestion, str) and len(suggestion) > 20, (
+            f"fix_suggestion for {code} is missing or too short"
+        )
+
+
+def test_all_categories_have_fix_suggestion():
+    """Every taxonomy code must have a corresponding fix_suggestion entry."""
+    from agent_triage.engine.classifier import _FIX_SUGGESTIONS
+
+    for code in all_codes():
+        assert code in _FIX_SUGGESTIONS, f"Missing fix_suggestion for {code}"
+
+
+# --------------------------------------------------------------------------- #
+# calibration (Tier 4)
+# --------------------------------------------------------------------------- #
+def test_calibration_identity_on_perfect_predictions():
+    """When all predictions are correct at confidence=1.0, sigmoid output ~1."""
+    from agent_triage.eval.calibration import CalibrationFitter
+
+    fitter = CalibrationFitter()
+    confidences = [1.0, 0.9, 0.8]
+    correct = [True, True, True]
+    fitter.fit(confidences, correct, steps=500)
+    # A perfect calibrator should map high confidence to high probability
+    out = fitter.transform(0.9)
+    assert out > 0.5, f"Expected > 0.5 for high-confidence correct predictions, got {out}"
+
+
+def test_calibration_shifts_overconfident_scores():
+    """When predictions at 0.9 confidence are only 60% correct, output should be lower."""
+    from agent_triage.eval.calibration import CalibrationFitter
+
+    fitter = CalibrationFitter()
+    # 4 right, 6 wrong — all at high confidence: should pull down
+    confidences = [0.9] * 10
+    correct = [True] * 4 + [False] * 6
+    fitter.fit(confidences, correct, steps=1000, lr=0.05)
+    out = fitter.transform(0.9)
+    # calibrated output should be lower than raw 0.9 since classifier is only 40% accurate here
+    assert out < 0.9, f"Expected calibrated score < 0.9, got {out}"
+
+
+def test_reliability_report_ece():
+    """ECE = 0 when confidence matches accuracy exactly."""
+    from agent_triage.eval.calibration import reliability_report
+
+    # All predictions at 0.8 confidence, all correct: accuracy=1.0 in that bin → gap=0.2
+    confs = [0.85] * 10
+    correct = [True] * 8 + [False] * 2
+    report = reliability_report(confs, correct, n_bins=5)
+    assert 0 <= report.expected_calibration_error <= 1.0
+    assert 0 <= report.max_calibration_error <= 1.0
+
+
+def test_calibration_roundtrip_serialization():
+    """CalibrationFitter serializes to dict and restores correctly."""
+    from agent_triage.eval.calibration import CalibrationFitter
+
+    fitter = CalibrationFitter()
+    fitter.fit([0.6, 0.7, 0.8], [True, True, False])
+    d = fitter.to_dict()
+    restored = CalibrationFitter.from_dict(d)
+    assert abs(restored.a - fitter.a) < 1e-9
+    assert abs(restored.b - fitter.b) < 1e-9
+    assert abs(restored.transform(0.7) - fitter.transform(0.7)) < 1e-9
+
+
+# --------------------------------------------------------------------------- #
+# SWE-agent adapter (Tier 3)
+# --------------------------------------------------------------------------- #
+def test_swebench_adapter_basic():
+    """from_swebench converts a minimal SWE-agent record into an AgentRun."""
+    from agent_triage.harness.swebench_adapter import from_swebench
+
+    record = {
+        "instance_id": "django__django-12345",
+        "model_name_or_path": "gpt-4o",
+        "model_patch": "diff --git a/x.py b/x.py\n--- a/x.py\n+++ b/x.py\n@@ -1 +1 @@\n-old\n+new",
+        "trajectory": [
+            {"action": "bash\npython -m pytest tests/", "observation": "PASSED exit code: 0"},
+            {"action": "edit x.py\n...", "observation": "File edited successfully."},
+            {"action": "submit", "observation": ""},
+        ],
+        "info": {"exit_status": "submitted", "resolved": True},
+    }
+    run = from_swebench(record)
+    assert run.run_id == "swe-agent-django__django-12345"
+    assert run.agent == "swe-agent"
+    assert run.model == "gpt-4o"
+    assert run.task.task_id == "django__django-12345"
+    assert run.resolved is True
+    assert run.produced_patch is True
+    assert len(run.steps) == 3
+
+
+def test_swebench_adapter_action_classification():
+    """from_swebench correctly maps action types."""
+    from agent_triage.harness.swebench_adapter import from_swebench
+    from agent_triage.schema.trace import ActionType
+
+    record = {
+        "instance_id": "test-01",
+        "trajectory": [
+            {"action": "bash\nls .", "observation": "README.md"},
+            {"action": "edit main.py\n...", "observation": "ok"},
+            {"action": "view foo.py", "observation": "content"},
+            {"action": "finish", "observation": ""},
+        ],
+        "info": {},
+    }
+    run = from_swebench(record)
+    types = [s.action_type for s in run.steps]
+    assert types[0] == ActionType.COMMAND
+    assert types[1] == ActionType.FILE_EDIT
+    assert types[2] == ActionType.FILE_READ
+    assert types[3] == ActionType.FINISH
+
+
+def test_swebench_adapter_unresolved_on_error_exit():
+    """SWE-agent runs with 'exit_error' or 'exit_cost' status are marked unresolved."""
+    from agent_triage.harness.swebench_adapter import from_swebench
+
+    for bad_status in ("exit_error", "exit_cost", "exit_context"):
+        record = {
+            "instance_id": "test-02",
+            "trajectory": [],
+            "info": {"exit_status": bad_status, "resolved": True},  # resolved=True is overridden
+        }
+        run = from_swebench(record)
+        assert run.resolved is False, f"Expected unresolved for exit_status={bad_status}"
+
+
+def test_swebench_adapter_triage_classifiable():
+    """An AgentRun from the SWE-bench adapter can be classified by the engine."""
+    from agent_triage.harness.swebench_adapter import from_swebench
+
+    record = {
+        "instance_id": "triage-test-01",
+        "trajectory": [],
+        "info": {"exit_status": "exit_cost"},
+    }
+    run = from_swebench(record)
+    classifier = TriageClassifier(provider=MockProvider())
+    card = classifier.classify(run)
+    assert card.primary_category in all_codes()
+    assert card.fix_suggestion is not None

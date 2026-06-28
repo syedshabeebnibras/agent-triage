@@ -20,7 +20,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-astropy__astropy-14995",
@@ -37,7 +38,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-astropy__astropy-6938",
@@ -54,7 +56,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-astropy__astropy-7746",
@@ -71,7 +74,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-django__django-10914",
@@ -88,7 +92,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-django__django-10924",
@@ -105,7 +110,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-django__django-11001",
@@ -122,7 +128,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-django__django-11019",
@@ -139,7 +146,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-django__django-11039",
@@ -156,7 +164,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-django__django-11049",
@@ -173,7 +182,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-django__django-11099",
@@ -221,7 +231,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Fix the environment image / setup script. Capture the exact missing dependency and pin it. Escalate to infra if the base image is wrong.",
     "prevention": "Harden the sandbox base image; add a dependency pre-check step; snapshot known-good environments per repo.",
     "taxonomy_version": "0.2.0",
-    "provider": "anthropic:claude-sonnet-4-6"
+    "provider": "anthropic:claude-sonnet-4-6",
+    "fix_suggestion": "Pin the missing dependency in the sandbox base image or setup script. Add a pre-run smoke test that verifies the environment imports all required packages before the agent starts. Snapshot known-good environments per repo and tag them in the run manifest."
   },
   {
     "run_id": "openhands-django__django-11133",
@@ -238,7 +249,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-django__django-11179",
@@ -255,7 +267,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-django__django-11283",
@@ -272,7 +285,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-django__django-11422",
@@ -289,7 +303,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-django__django-11564",
@@ -306,7 +321,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-django__django-11583",
@@ -323,7 +339,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-django__django-11620",
@@ -340,7 +357,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-django__django-11630",
@@ -357,7 +375,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-django__django-11742",
@@ -374,7 +393,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-django__django-11797",
@@ -391,7 +411,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-django__django-11815",
@@ -408,7 +429,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-django__django-11848",
@@ -441,7 +463,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering with the repeated-failure step indices. Distinguish from REASONING: here the *plan* may be fine.",
     "prevention": "Add edit-application validation with retry/repair; detect command repetition and force a strategy change; inject workspace path at agent init so it never has to guess.",
     "taxonomy_version": "0.2.0",
-    "provider": "anthropic:claude-sonnet-4-6"
+    "provider": "anthropic:claude-sonnet-4-6",
+    "fix_suggestion": "Add edit-application validation after every FILE_EDIT: verify the modified file still parses (Python: `ast.parse`). Detect command repetition \u2014 if the same command fails 3 times with identical output, inject: 'You are repeating the same failing action. Re-read the file and change your approach.'"
   },
   {
     "run_id": "openhands-django__django-11905",
@@ -458,7 +481,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-django__django-11910",
@@ -475,7 +499,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-django__django-11964",
@@ -492,7 +517,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-django__django-11999",
@@ -509,7 +535,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-django__django-12113",
@@ -526,7 +553,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-django__django-12125",
@@ -543,7 +571,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-django__django-12184",
@@ -560,7 +589,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-django__django-12284",
@@ -577,7 +607,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-django__django-12286",
@@ -594,7 +625,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-django__django-12308",
@@ -611,7 +643,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-django__django-12453",
@@ -628,7 +661,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-django__django-12470",
@@ -645,7 +679,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-django__django-12497",
@@ -662,7 +697,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-django__django-12589",
@@ -679,7 +715,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-django__django-12700",
@@ -717,7 +754,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering with the repeated-failure step indices. Distinguish from REASONING: here the *plan* may be fine.",
     "prevention": "Add edit-application validation with retry/repair; detect command repetition and force a strategy change; inject workspace path at agent init so it never has to guess.",
     "taxonomy_version": "0.2.0",
-    "provider": "anthropic:claude-sonnet-4-6"
+    "provider": "anthropic:claude-sonnet-4-6",
+    "fix_suggestion": "Add edit-application validation after every FILE_EDIT: verify the modified file still parses (Python: `ast.parse`). Detect command repetition \u2014 if the same command fails 3 times with identical output, inject: 'You are repeating the same failing action. Re-read the file and change your approach.'"
   },
   {
     "run_id": "openhands-django__django-12708",
@@ -734,7 +772,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   },
   {
     "run_id": "openhands-django__django-12747",
@@ -751,7 +790,8 @@ export const DEMO_CARDS: TriageCard[] = [
     "recommended_action": "Escalate to engineering: the agent loop must gate 'finish' on having produced at least one file edit. Show the step where understanding was reached and the remaining turn count at that point.",
     "prevention": "Add a hard rule: 'finish' is disallowed unless at least one file edit has been made; warn the agent after N exploration-only turns with no edits; consider a planning step that commits a skeleton edit early to anchor subsequent refinement.",
     "taxonomy_version": "0.2.0",
-    "provider": "rule-based"
+    "provider": "rule-based",
+    "fix_suggestion": "Gate `finish` on at least one FILE_EDIT having been observed. After every N exploration-only turns with no edit, inject a forced prompt: 'You have not modified any files yet. You must now commit to an implementation and call edit_file.' Consider a mandatory skeleton-edit step after the planning phase."
   }
 ];
 

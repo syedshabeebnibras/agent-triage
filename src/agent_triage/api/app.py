@@ -3,9 +3,11 @@
 Endpoints:
   GET  /health                 -> liveness + provider info
   GET  /taxonomy               -> the failure taxonomy (for the dashboard)
+  GET  /triage/demo            -> pre-classified demo batch (public, cached)
   POST /triage                 -> classify a single AgentRun, return a TriageCard
   POST /triage/batch           -> classify many runs, return cards + distribution
   POST /stats                  -> distribution/calibration over a set of runs
+  GET  /stats/trend            -> session trend of batch results over time
 
 Authentication
 --------------
@@ -14,18 +16,21 @@ real LLM provider (not mock mode), the three LLM-calling endpoints require:
 
     Authorization: Bearer <TRIAGE_API_KEY>
 
-/health and /taxonomy are always unauthenticated (no credits at risk).
+/health, /taxonomy, /triage/demo, and /stats/trend are always unauthenticated.
 In mock mode the auth gate is skipped — safe because no API credits are spent.
 """
 
 from __future__ import annotations
 
 import json
+import logging
 import os
-from collections import Counter
+import time
+from collections import Counter, deque
 from pathlib import Path
+from typing import Any
 
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
@@ -35,6 +40,8 @@ from agent_triage.engine.classifier import TriageClassifier
 from agent_triage.llm.provider import default_provider
 from agent_triage.schema.trace import AgentRun
 from agent_triage.taxonomy.categories import TAXONOMY, TAXONOMY_VERSION
+
+_log = logging.getLogger("agent_triage.api")
 
 app = FastAPI(
     title="Agent Triage API",
@@ -54,6 +61,9 @@ app.add_middleware(
 _provider = default_provider()
 _classifier = TriageClassifier(provider=_provider)
 _TRIAGE_API_KEY = os.getenv("TRIAGE_API_KEY")
+
+# In-memory ring buffer for trend tracking (last 50 batch results)
+_trend_log: deque[dict[str, Any]] = deque(maxlen=50)
 
 
 def _build_demo_cache() -> dict | None:
@@ -89,6 +99,23 @@ def _build_demo_cache() -> dict | None:
 _demo_cache: dict | None = _build_demo_cache()
 
 _bearer = HTTPBearer(auto_error=False)
+
+
+@app.middleware("http")
+async def _request_logger(request: Request, call_next):
+    """Log every request as a structured JSON line for observability."""
+    t0 = time.monotonic()
+    response = await call_next(request)
+    elapsed_ms = round((time.monotonic() - t0) * 1000, 1)
+    _log.info(
+        json.dumps({
+            "method": request.method,
+            "path": request.url.path,
+            "status": response.status_code,
+            "latency_ms": elapsed_ms,
+        })
+    )
+    return response
 
 
 def _require_auth(
@@ -175,13 +202,24 @@ def triage_batch(req: BatchRequest) -> dict:
     cards = [_classifier.classify(r) for r in req.runs]
     dist: Counter[str] = Counter(c.primary_category for c in cards)
     owners: Counter[str] = Counter(c.owner.value for c in cards)
-    return {
+    result = {
         "count": len(cards),
         "cards": [c.model_dump(mode="json") for c in cards],
         "distribution": dict(dist),
         "owner_distribution": dict(owners),
         "mock_mode": _provider.name == "mock",
     }
+    # record in trend log (snapshot without cards to keep memory small)
+    _trend_log.append({
+        "ts": time.time(),
+        "count": result["count"],
+        "distribution": result["distribution"],
+        "owner_distribution": result["owner_distribution"],
+        "rule_rate": round(
+            sum(1 for c in cards if c.classifier == "rule") / max(len(cards), 1), 4
+        ),
+    })
+    return result
 
 
 @app.post("/stats", dependencies=[Depends(_require_auth)])
@@ -195,4 +233,22 @@ def stats(req: BatchRequest) -> dict:
         "distribution": dict(dist),
         "other_rate": round(dist.get("OTHER", 0) / total, 4),
         "classifier_split": dict(by_classifier),
+    }
+
+
+@app.get("/stats/trend")
+def stats_trend() -> dict:
+    """Return the session history of /triage/batch calls (last 50).
+
+    Each entry records when the batch was submitted, the run count, the
+    category distribution, and the rule-vs-LLM split. Useful for monitoring
+    whether failure-mode rates are shifting across batches over time.
+
+    Note: this is an in-memory ring buffer — it resets on container restart.
+    For persistent trend storage, export to a time-series DB.
+    """
+    return {
+        "batches": list(_trend_log),
+        "total_batches_recorded": len(_trend_log),
+        "note": "In-memory only; resets on container restart.",
     }

@@ -47,6 +47,7 @@ class TriageCard(BaseModel):
     owner: Owner
     recommended_action: str
     prevention: str
+    fix_suggestion: str | None = None  # concrete scaffold-level fix for this category
 
     # provenance / reproducibility
     taxonomy_version: str = TAXONOMY_VERSION
