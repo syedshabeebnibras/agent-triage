@@ -231,6 +231,40 @@ def triage_demo() -> dict:
     }
 
 
+@app.get("/triage/cards")
+def triage_cards(path: str = "data/traces/new_cards.jsonl") -> dict:
+    """Serve pre-classified TriageCards from a JSONL file without re-classifying.
+
+    The /triage/demo endpoint re-runs classification on raw AgentRun objects.
+    This endpoint serves already-classified cards directly — useful for large
+    batches that were pre-classified offline.
+    """
+    cards_path = Path(path)
+    if not cards_path.exists():
+        return {
+            "count": 0,
+            "cards": [],
+            "distribution": {},
+            "owner_distribution": {},
+            "mock_mode": False,
+        }
+    cards_raw = []
+    with open(cards_path) as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                cards_raw.append(json.loads(line))
+    dist: Counter[str] = Counter(c["primary_category"] for c in cards_raw)
+    owners: Counter[str] = Counter(c["owner"] for c in cards_raw)
+    return {
+        "count": len(cards_raw),
+        "cards": cards_raw,
+        "distribution": dict(dist),
+        "owner_distribution": dict(owners),
+        "mock_mode": False,
+    }
+
+
 @app.post("/triage", dependencies=[Depends(_require_auth)])
 def triage(run: AgentRun) -> dict:
     card = _classifier.classify(run)

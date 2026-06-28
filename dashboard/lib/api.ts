@@ -89,14 +89,19 @@ export const OWNER_COLORS: Record<Owner, string> = {
 
 export async function fetchBatch(): Promise<BatchResponse> {
   if (API_BASE) {
+    // Try pre-classified cards first (larger batch, no re-classification cost).
     try {
-      // /triage/demo is a public GET endpoint — the API classifies the bundled
-      // demo runs once at startup and serves the cached result. No auth required.
+      const res = await fetch(`${API_BASE}/triage/cards`);
+      if (res.ok) {
+        const body = await res.json() as BatchResponse;
+        if (body.count > 0) return body;
+      }
+    } catch { /* fall through */ }
+    // Fall back to demo endpoint (classifies bundled demo_runs.jsonl).
+    try {
       const res = await fetch(`${API_BASE}/triage/demo`);
       if (res.ok) return (await res.json()) as BatchResponse;
-    } catch {
-      // fall through to bundled demo cards
-    }
+    } catch { /* fall through */ }
   }
   return demoBatch();
 }
