@@ -23,13 +23,71 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import subprocess
 import tempfile
 import time
 from datetime import UTC, datetime
 from pathlib import Path
 
+from pydantic import Field as _Field
+
+from openhands.sdk import Action as _Action
+from openhands.sdk import Observation as _Observation
+from openhands.sdk import register_tool as _register_tool
+from openhands.sdk.tool import ToolAnnotations as _ToolAnnotations
+from openhands.sdk.tool import ToolDefinition as _ToolDefinition
+from openhands.sdk.tool import ToolExecutor as _ToolExecutor
+
 OPENHANDS_SUPPRESS_BANNER = "1"
 os.environ.setdefault("OPENHANDS_SUPPRESS_BANNER", "1")
+
+
+class _BashAction(_Action):
+    command: str = _Field(description="Shell command to run.")
+
+
+class _BashObservation(_Observation):
+    @classmethod
+    def from_text(cls, text: str) -> "_BashObservation":
+        return cls(content=text)
+
+
+class _BashExecutor(_ToolExecutor):
+    def __call__(self, action: _BashAction, conversation=None) -> _BashObservation:
+        try:
+            result = subprocess.run(
+                action.command,
+                shell=True,
+                capture_output=True,
+                text=True,
+                timeout=60,
+                cwd="/tmp",
+            )
+            out = (result.stdout or "") + (result.stderr or "")
+            return _BashObservation.from_text(out[:4000] or "(no output)")
+        except subprocess.TimeoutExpired:
+            return _BashObservation.from_text("Error: command timed out after 60s")
+        except Exception as exc:
+            return _BashObservation.from_text(f"Error: {exc}")
+
+
+class _BashTool(_ToolDefinition[_BashAction, _BashObservation]):
+    @classmethod
+    def create(cls, conv_state=None, **params):
+        return [
+            cls(
+                action_type=_BashAction,
+                observation_type=_BashObservation,
+                description="Run a shell command and return stdout + stderr (truncated to 4000 chars).",
+                executor=_BashExecutor(),
+                annotations=_ToolAnnotations(
+                    readOnlyHint=False,
+                    destructiveHint=True,
+                    idempotentHint=False,
+                    openWorldHint=True,
+                ),
+            )
+        ]
 
 
 def _check_api_key() -> str:
@@ -85,7 +143,7 @@ def _run_instance(
 
     with tempfile.TemporaryDirectory() as workspace_dir:
         try:
-            workspace = LocalWorkspace(workspace_dir)
+            workspace = LocalWorkspace(working_dir=workspace_dir)
             conv = LocalConversation(
                 agent=agent,
                 workspace=workspace,
@@ -122,6 +180,9 @@ def _run_instance(
 
 def main(args: argparse.Namespace) -> None:
     api_key = _check_api_key()
+    if args.with_bash:
+        _register_tool("bash", _BashTool)
+        print("BashTool registered — agent can now run shell commands")
     model = args.model
     max_turns = args.max_turns
     max_instances = args.max_instances
@@ -193,5 +254,7 @@ if __name__ == "__main__":
     parser.add_argument("--max-turns", type=int, default=100, help="Max agent turns per instance (default: 100)")
     parser.add_argument("--model", default="claude-haiku-4-5-20251001", help="Model name")
     parser.add_argument("--output-dir", default="", help="Output directory (default: data/traces/run_<timestamp>)")
+    parser.add_argument("--with-bash", action="store_true", default=False,
+                        help="Register a BashTool so the agent can execute shell commands")
     args = parser.parse_args()
     main(args)
