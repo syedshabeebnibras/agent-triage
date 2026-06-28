@@ -498,6 +498,54 @@ section.block {
   color: #a8c878;
 }
 
+/* ── filter bar ─────────────────────────────────────────────────────────── */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.filter-search {
+  flex: 1 1 220px;
+  background: var(--panel-2);
+  border: 1px solid var(--line-soft);
+  border-radius: 3px;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+}
+.filter-search:focus { border-color: var(--accent); }
+.filter-select {
+  background: var(--panel-2);
+  border: 1px solid var(--line-soft);
+  border-radius: 3px;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+}
+.filter-conf {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+.filter-conf input[type="range"] { width: 80px; cursor: pointer; }
+.filter-reset {
+  background: none;
+  border: 1px solid var(--line-soft);
+  border-radius: 3px;
+  padding: 5px 10px;
+  font-size: 12px;
+  color: var(--text-faint);
+  cursor: pointer;
+}
+.filter-reset:hover { border-color: var(--accent); color: var(--text); }
+
 /* ---- footer ---- */
 footer {
   padding: 40px 0 64px;

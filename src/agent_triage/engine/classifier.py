@@ -16,7 +16,7 @@ preserved so downstream eval can measure where accuracy comes from.
 
 from __future__ import annotations
 
-from agent_triage.engine.card import Evidence, TriageCard
+from agent_triage.engine.card import CategoryScore, Evidence, TriageCard
 from agent_triage.engine.compaction import compact_trace
 from agent_triage.engine.signals import extract_signals, rule_based_guess
 from agent_triage.llm.provider import LLMProvider, default_provider
@@ -158,11 +158,16 @@ Return JSON with exactly these keys:
   "primary_category": "<one taxonomy code>",
   "secondary_category": "<one taxonomy code or null>",
   "confidence": <float 0..1>,
+  "all_categories": [{{"category": "<code>", "confidence": <float>}}],
   "root_cause": "<2-4 sentence specific hypothesis grounded in the evidence>",
   "evidence_step_indices": [<int>, ...],
   "evidence_notes": {{"<step_index>": "<why this step is evidence>"}},
   "reasoning": "<brief chain of reasoning>"
 }}
+
+For all_categories: include every taxonomy code with confidence >= 0.2.
+If only one category is plausible, return a single-element list.
+Do NOT include codes with confidence < 0.2.
 
 Rules:
 - primary_category MUST be one of the taxonomy codes above.
@@ -275,6 +280,17 @@ class TriageClassifier:
                 Evidence(step_index=i, excerpt=excerpt, why=str(notes.get(str(i), "")))
             )
 
+        # multi-label: parse all_categories from LLM output
+        all_cats: list[CategoryScore] = []
+        for entry in raw.get("all_categories") or []:
+            try:
+                cat_code = str(entry.get("category", "")).strip().upper()
+                cat_conf = float(entry.get("confidence", 0.0))
+            except (TypeError, ValueError, AttributeError):
+                continue
+            if is_valid(cat_code) and cat_conf >= 0.2:
+                all_cats.append(CategoryScore(category=cat_code, confidence=cat_conf, source="llm"))
+
         return TriageCard(
             run_id=run.run_id,
             task_id=run.task.task_id,
@@ -284,6 +300,7 @@ class TriageClassifier:
             secondary_category=secondary,
             confidence=conf,
             classifier="llm",
+            all_categories=all_cats,
             root_cause=str(raw.get("root_cause", "")).strip() or "(no root cause given)",
             evidence=evidence,
             owner=cat.typical_owner,

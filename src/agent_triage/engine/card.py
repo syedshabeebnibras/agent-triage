@@ -25,6 +25,14 @@ class Evidence(BaseModel):
     why: str = ""  # why this excerpt supports the classification
 
 
+class CategoryScore(BaseModel):
+    """One entry in a multi-label classification result."""
+
+    category: str
+    confidence: float = Field(ge=0.0, le=1.0)
+    source: str = "llm"  # "rule" | "llm"
+
+
 class TriageCard(BaseModel):
     """The full triage result for one agent run."""
 
@@ -38,6 +46,14 @@ class TriageCard(BaseModel):
     secondary_category: str | None = None
     confidence: float = Field(ge=0.0, le=1.0)
     classifier: str = "llm"  # "rule" | "llm" | "hybrid"
+
+    # multi-label: all categories with non-trivial confidence (>= 0.2)
+    # Populated by the LLM path when the run shows concurrent failure modes.
+    all_categories: list[CategoryScore] = Field(default_factory=list)
+
+    # human correction (set via POST /cards/{run_id}/correct)
+    human_label: str | None = None
+    human_note: str | None = None
 
     # explanation
     root_cause: str
@@ -66,6 +82,12 @@ class TriageCard(BaseModel):
         ]
         if self.secondary_category:
             lines.append(f"- **Secondary**: `{self.secondary_category}`")
+        if self.all_categories:
+            cats = ", ".join(f"`{c.category}` ({c.confidence:.0%})" for c in self.all_categories)
+            lines.append(f"- **All categories**: {cats}")
+        if self.human_label:
+            note = f" — {self.human_note}" if self.human_note else ""
+            lines.append(f"- **Human correction**: `{self.human_label}`{note}")
         lines += [
             "",
             "## Root cause",

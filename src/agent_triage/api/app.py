@@ -1,22 +1,24 @@
 """FastAPI service for Agent Triage.
 
 Endpoints:
-  GET  /health                 -> liveness + provider info
-  GET  /taxonomy               -> the failure taxonomy (for the dashboard)
-  GET  /triage/demo            -> pre-classified demo batch (public, cached)
-  POST /triage                 -> classify a single AgentRun, return a TriageCard
-  POST /triage/batch           -> classify many runs, return cards + distribution
-  POST /stats                  -> distribution/calibration over a set of runs
-  GET  /stats/trend            -> session trend of batch results over time
+  GET  /health                      -> liveness + provider info
+  GET  /taxonomy                    -> the failure taxonomy (for the dashboard)
+  GET  /triage/demo                 -> pre-classified demo batch (public, cached)
+  POST /triage                      -> classify a single AgentRun, return a TriageCard
+  POST /triage/batch                -> classify many runs, return cards + distribution
+  POST /stats                       -> distribution/calibration over a set of runs
+  GET  /stats/trend                 -> batch trend history (SQLite-backed)
+  POST /cards/{run_id}/correct      -> record a human correction for a triage result
+  GET  /corrections                 -> list all human corrections
 
 Authentication
 --------------
 When TRIAGE_API_KEY is set in the environment AND the server is running with a
-real LLM provider (not mock mode), the three LLM-calling endpoints require:
+real LLM provider (not mock mode), the triage endpoints require:
 
     Authorization: Bearer <TRIAGE_API_KEY>
 
-/health, /taxonomy, /triage/demo, and /stats/trend are always unauthenticated.
+/health, /taxonomy, /triage/demo, /stats/trend, and /corrections are public.
 In mock mode the auth gate is skipped — safe because no API credits are spent.
 """
 
@@ -25,10 +27,11 @@ from __future__ import annotations
 import json
 import logging
 import os
+import sqlite3
 import time
-from collections import Counter, deque
+from collections import Counter
+from contextlib import contextmanager
 from pathlib import Path
-from typing import Any
 
 from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -49,8 +52,6 @@ app = FastAPI(
     description="Failure triage and root-cause analysis for autonomous coding-agent runs.",
 )
 
-# CORS: allow all origins for the demo dashboard.
-# Tighten allow_origins to your dashboard domain for production.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -62,8 +63,47 @@ _provider = default_provider()
 _classifier = TriageClassifier(provider=_provider)
 _TRIAGE_API_KEY = os.getenv("TRIAGE_API_KEY")
 
-# In-memory ring buffer for trend tracking (last 50 batch results)
-_trend_log: deque[dict[str, Any]] = deque(maxlen=50)
+# SQLite path: use /data/triage.db if the directory exists (Render disk mount),
+# otherwise fall back to a local file. This survives container restarts when
+# a persistent disk is attached in Render settings (Settings → Disks → /data).
+_DB_PATH = Path(os.getenv("TRIAGE_DB_PATH", "/data/triage.db" if Path("/data").exists() else "triage.db"))
+
+
+def _init_db() -> None:
+    """Create tables if they don't exist yet."""
+    with _db() as conn:
+        conn.executescript("""
+            CREATE TABLE IF NOT EXISTS trend_log (
+                id       INTEGER PRIMARY KEY AUTOINCREMENT,
+                ts       REAL    NOT NULL,
+                count    INTEGER NOT NULL,
+                distribution TEXT NOT NULL,
+                owner_distribution TEXT NOT NULL,
+                rule_rate REAL NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS corrections (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                run_id     TEXT    NOT NULL,
+                auto_label TEXT    NOT NULL,
+                true_label TEXT    NOT NULL,
+                note       TEXT,
+                created_at REAL    NOT NULL
+            );
+        """)
+
+
+@contextmanager
+def _db():
+    conn = sqlite3.connect(str(_DB_PATH))
+    conn.row_factory = sqlite3.Row
+    try:
+        yield conn
+        conn.commit()
+    finally:
+        conn.close()
+
+
+_init_db()
 
 
 def _build_demo_cache() -> dict | None:
@@ -209,16 +249,15 @@ def triage_batch(req: BatchRequest) -> dict:
         "owner_distribution": dict(owners),
         "mock_mode": _provider.name == "mock",
     }
-    # record in trend log (snapshot without cards to keep memory small)
-    _trend_log.append({
-        "ts": time.time(),
-        "count": result["count"],
-        "distribution": result["distribution"],
-        "owner_distribution": result["owner_distribution"],
-        "rule_rate": round(
-            sum(1 for c in cards if c.classifier == "rule") / max(len(cards), 1), 4
-        ),
-    })
+    rule_rate = round(sum(1 for c in cards if c.classifier == "rule") / max(len(cards), 1), 4)
+    try:
+        with _db() as conn:
+            conn.execute(
+                "INSERT INTO trend_log (ts, count, distribution, owner_distribution, rule_rate) VALUES (?,?,?,?,?)",
+                (time.time(), len(cards), json.dumps(dict(dist)), json.dumps(dict(owners)), rule_rate),
+            )
+    except Exception as exc:
+        _log.warning("trend_log write failed: %s", exc)
     return result
 
 
@@ -237,18 +276,86 @@ def stats(req: BatchRequest) -> dict:
 
 
 @app.get("/stats/trend")
-def stats_trend() -> dict:
-    """Return the session history of /triage/batch calls (last 50).
+def stats_trend(limit: int = 50) -> dict:
+    """Return the history of /triage/batch calls, newest first (SQLite-backed).
 
-    Each entry records when the batch was submitted, the run count, the
-    category distribution, and the rule-vs-LLM split. Useful for monitoring
-    whether failure-mode rates are shifting across batches over time.
-
-    Note: this is an in-memory ring buffer — it resets on container restart.
-    For persistent trend storage, export to a time-series DB.
+    Survives container restarts when a persistent disk is mounted at /data.
+    Falls back to the local triage.db file when /data is unavailable.
     """
+    try:
+        with _db() as conn:
+            rows = conn.execute(
+                "SELECT ts, count, distribution, owner_distribution, rule_rate "
+                "FROM trend_log ORDER BY ts DESC LIMIT ?",
+                (min(limit, 500),),
+            ).fetchall()
+        batches = [
+            {
+                "ts": r["ts"],
+                "count": r["count"],
+                "distribution": json.loads(r["distribution"]),
+                "owner_distribution": json.loads(r["owner_distribution"]),
+                "rule_rate": r["rule_rate"],
+            }
+            for r in rows
+        ]
+    except Exception as exc:
+        _log.warning("trend_log read failed: %s", exc)
+        batches = []
     return {
-        "batches": list(_trend_log),
-        "total_batches_recorded": len(_trend_log),
-        "note": "In-memory only; resets on container restart.",
+        "batches": batches,
+        "total_batches_recorded": len(batches),
+        "db_path": str(_DB_PATH),
     }
+
+
+class CorrectionRequest(BaseModel):
+    true_label: str
+    note: str | None = None
+
+
+@app.post("/cards/{run_id}/correct")
+def correct_card(run_id: str, req: CorrectionRequest) -> dict:
+    """Record a human correction for an auto-classified triage card.
+
+    This is the feedback loop: when a support engineer disagrees with the
+    classifier verdict, they POST the correct label here. Corrections are
+    stored in SQLite and surfaced via GET /corrections for periodic review
+    to improve rule thresholds and the gold set.
+    """
+    from agent_triage.taxonomy.categories import is_valid
+
+    if not is_valid(req.true_label.upper()):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Unknown taxonomy code '{req.true_label}'. Must be one of: {', '.join(TAXONOMY.keys())}",
+        )
+    try:
+        with _db() as conn:
+            # fetch the most recent auto classification for this run_id from cards table
+            # (we don't store individual cards in DB yet — record auto_label as unknown
+            # if not tracked; a future migration can backfill from card JSONL exports)
+            conn.execute(
+                "INSERT INTO corrections (run_id, auto_label, true_label, note, created_at) VALUES (?,?,?,?,?)",
+                (run_id, "unknown", req.true_label.upper(), req.note, time.time()),
+            )
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"DB write failed: {exc}") from exc
+    return {"run_id": run_id, "true_label": req.true_label.upper(), "recorded": True}
+
+
+@app.get("/corrections")
+def list_corrections(limit: int = 100) -> dict:
+    """Return all recorded human corrections, newest first."""
+    try:
+        with _db() as conn:
+            rows = conn.execute(
+                "SELECT run_id, auto_label, true_label, note, created_at "
+                "FROM corrections ORDER BY created_at DESC LIMIT ?",
+                (min(limit, 1000),),
+            ).fetchall()
+        corrections = [dict(r) for r in rows]
+    except Exception as exc:
+        _log.warning("corrections read failed: %s", exc)
+        corrections = []
+    return {"corrections": corrections, "count": len(corrections)}

@@ -64,6 +64,13 @@ class Signals:
     verified_without_editing: bool = False  # ran test suite near end with no file edits (VERIFICATION pattern)
     max_step_count: int = 0
 
+    # Level 2 signals — added for REASONING and CONTEXT_RETRIEVAL detection
+    unique_files_opened: int = 0       # distinct file paths seen in FILE_READ actions
+    edited_files: list[str] = field(default_factory=list)  # files touched by FILE_EDIT actions
+    assertion_after_edit: bool = False # test assertion fails AFTER at least one FILE_EDIT → REASONING
+    narrow_file_search: bool = False   # <3 unique files opened in a long (>=20 step) run → CONTEXT_RETRIEVAL
+    last_edit_step_index: int = -1     # index of the most recent FILE_EDIT step
+
     def to_dict(self) -> dict:
         return {
             "produced_patch": self.produced_patch,
@@ -85,9 +92,14 @@ class Signals:
             "catastrophic_edit": self.catastrophic_edit,
             "verified_without_editing": self.verified_without_editing,
             "step_count": self.max_step_count,
+            "unique_files_opened": self.unique_files_opened,
+            "edited_files": self.edited_files,
+            "assertion_after_edit": self.assertion_after_edit,
+            "narrow_file_search": self.narrow_file_search,
         }
 
 
+_FILE_PATH = re.compile(r"(?:^|\s)([a-zA-Z0-9_./-]+\.[a-zA-Z]{1,6})(?:\s|$|:)")
 _TEST_CMD = re.compile(r"\b(pytest|tox|unittest|python -m pytest|npm test|go test|nose)\b", re.I)
 _RUNTESTS_CMD = re.compile(r"\bruntest(s)?\b", re.I)
 _TEST_PASS = re.compile(r"\b(\d+) passed\b|all tests passed|OK\b", re.I)
@@ -107,6 +119,9 @@ def extract_signals(run: AgentRun) -> Signals:
     last_test_step_passed: bool | None = None
     last_runtests_step_index: int = -1
     last_runtests_exit_ok: bool = False
+    files_opened: set[str] = set()
+    had_edit_before: bool = False
+    _assertion_pat = re.compile(r"assertionerror|assert .*==|expected .* but got", re.I)
 
     for step in run.steps:
         obs_text = step.observation.content if step.observation else ""
@@ -114,10 +129,28 @@ def extract_signals(run: AgentRun) -> Signals:
         # file edit tracking (absence = IMPLEMENTATION_STALL signal)
         if step.action_type == ActionType.FILE_EDIT:
             sig.no_file_edits = False
+            sig.last_edit_step_index = step.index
+            had_edit_before = True
+            # extract edited file path from content (first token that looks like a path)
+            m = _FILE_PATH.search(step.content or "")
+            if m:
+                sig.edited_files.append(m.group(1))
+
+        # track unique files opened in FILE_READ actions
+        if step.action_type == ActionType.FILE_READ:
+            m = _FILE_PATH.search(step.content or "")
+            if m:
+                files_opened.add(m.group(1))
 
         # failed steps (non-zero exit / error action)
         if step.failed:
             sig.failed_step_indices.append(step.index)
+
+        # REASONING signal: assertion failure that appears AFTER a file edit.
+        # This distinguishes REASONING (right file edited, wrong logic) from
+        # IMPLEMENTATION_STALL (never edited) and TOOL_USE (edit failed to apply).
+        if had_edit_before and step.failed and _assertion_pat.search(obs_text):
+            sig.assertion_after_edit = True
 
         # Error fingerprints — two constraints eliminate the most common false positives:
         # 1. Only search obs_text (not the command itself): prevents matching "timeout"
@@ -159,6 +192,12 @@ def extract_signals(run: AgentRun) -> Signals:
         # explicit finish
         if step.action_type == ActionType.FINISH:
             sig.finished_explicitly = True
+
+    # unique files opened (for CONTEXT_RETRIEVAL detection)
+    sig.unique_files_opened = len(files_opened)
+    # narrow_file_search: long run, no edits, opened very few distinct files
+    if sig.max_step_count >= 20 and sig.no_file_edits and sig.unique_files_opened < 3:
+        sig.narrow_file_search = True
 
     # prefer the run's authoritative test result if present
     if run.test_result is not None:
@@ -324,6 +363,34 @@ def rule_based_guess(sig: Signals) -> tuple[str, float, str] | None:
         labels = ", ".join(sorted({f[2] for f in env}))
         return ("ENVIRONMENT", 0.75, f"Environment fingerprint(s) in early steps: {labels}.")
 
-    # Everything else is nuanced (reasoning vs retrieval vs verification) — let
-    # the LLM weigh the full trajectory.
+    # REASONING: agent made at least one file edit but a test assertion still fails
+    # after the edit. The agent is in the right place but the logic is wrong.
+    # Guard: must have actually edited (no_file_edits=False) and assertion fires
+    # AFTER the edit (assertion_after_edit=True). Confidence capped at 0.65 because
+    # the LLM can sometimes find TOOL_USE evidence in the same trajectory.
+    if sig.assertion_after_edit and not sig.no_file_edits and not sig.catastrophic_edit:
+        edited = ", ".join(sig.edited_files[:3]) if sig.edited_files else "unknown"
+        return (
+            "REASONING",
+            0.65,
+            f"Test assertion failed after file edit on [{edited}]. "
+            "Agent reached and modified the correct file but the logic in the edit "
+            "does not satisfy the failing test assertion.",
+        )
+
+    # CONTEXT_RETRIEVAL: long run, no edits, very few files opened.
+    # Agent never explored enough of the repo to find the right location.
+    # Confidence is lower (0.60) — a narrow search could also indicate stall-like
+    # paralysis where the agent knows what to look for but times out. The LLM can
+    # weigh this more carefully when it does not get caught by the stall rule above.
+    if sig.narrow_file_search and not sig.hit_resource_limit:
+        return (
+            "CONTEXT_RETRIEVAL",
+            0.60,
+            f"Agent opened only {sig.unique_files_opened} distinct file(s) across "
+            f"{sig.max_step_count} steps without making any edit. The run likely "
+            "failed because the agent never located the relevant code to modify.",
+        )
+
+    # Everything else is nuanced — let the LLM weigh the full trajectory.
     return None

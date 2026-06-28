@@ -140,14 +140,32 @@ def test_rule_based_guess_infra():
     assert guess[0] == "INFRA_ERROR"
 
 
-def test_rule_based_guess_returns_none_for_nuanced():
+def test_rule_based_guess_reasoning_signal():
+    # FILE_EDIT followed by assertion failure -> REASONING rule fires
     run = make_run([
         Step(index=0, action_type=ActionType.FILE_EDIT, content="edit paginator.py"),
         Step(index=1, action_type=ActionType.COMMAND, content="pytest",
              observation=Observation(content="AssertionError", exit_code=1)),
     ], final_patch="diff")
     sig = extract_signals(run)
-    # has a patch + reasoning-ish fingerprint -> should defer to LLM
+    result = rule_based_guess(sig)
+    assert result is not None
+    code, conf, _ = result
+    assert code == "REASONING"
+    assert conf >= 0.60
+
+
+def test_rule_based_guess_returns_none_for_nuanced():
+    # No file edits, no fingerprints, no stall pattern -> pure LLM territory
+    run = make_run([
+        Step(index=0, action_type=ActionType.COMMAND, content="grep something",
+             observation=Observation(content="found it", exit_code=0)),
+        Step(index=1, action_type=ActionType.COMMAND, content="cat file.py",
+             observation=Observation(content="content", exit_code=0)),
+    ])
+    sig = extract_signals(run)
+    # short run with no edits, no fingerprints, but too short for IMPLEMENTATION_STALL
+    assert sig.max_step_count < 10  # rule requires >= 10 steps
     assert rule_based_guess(sig) is None
 
 

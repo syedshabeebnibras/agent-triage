@@ -1,0 +1,187 @@
+name: Agent Triage
+
+# Classifies a failed agent run and posts a triage card as a PR/issue comment.
+#
+# Usage (reusable workflow — call from another repo's workflow):
+#
+#   jobs:
+#     triage:
+#       uses: syedshabeebnibras/agent-triage/.github/workflows/triage.yml@main
+#       with:
+#         run_file: path/to/agent_output.jsonl
+#         agent: openhands                 # openhands | swebench | aider | autocoderover
+#         post_comment: true
+#       secrets:
+#         TRIAGE_API_KEY: ${{ secrets.TRIAGE_API_KEY }}
+#
+# Standalone trigger (run directly in this repo for testing):
+#
+#   gh workflow run triage.yml -f run_file=data/traces/demo_runs.jsonl
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_file:
+        description: 'Path to agent run JSONL file'
+        required: true
+        type: string
+      agent:
+        description: 'Agent type (openhands | swebench | aider | autocoderover)'
+        required: false
+        default: 'openhands'
+        type: string
+      post_comment:
+        description: 'Post triage result as a PR comment'
+        required: false
+        default: 'false'
+        type: string
+
+  workflow_call:
+    inputs:
+      run_file:
+        description: 'Path to agent run JSONL file'
+        required: true
+        type: string
+      agent:
+        description: 'Agent type'
+        required: false
+        default: 'openhands'
+        type: string
+      post_comment:
+        description: 'Post triage result as a PR comment'
+        required: false
+        default: 'false'
+        type: string
+    secrets:
+      TRIAGE_API_KEY:
+        required: false
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install agent-triage
+        run: pip install -e ".[dev]" --quiet
+
+      - name: Run triage
+        id: triage
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          TRIAGE_API_KEY: ${{ secrets.TRIAGE_API_KEY }}
+          # Inputs are passed as env vars — never interpolated into the shell command
+          TRIAGE_RUN_FILE: ${{ inputs.run_file }}
+          TRIAGE_AGENT: ${{ inputs.agent }}
+        run: |
+          python3 - <<'PYEOF'
+          import json, os, sys
+          from pathlib import Path
+
+          run_file = os.environ["TRIAGE_RUN_FILE"]
+          agent_type = os.environ.get("TRIAGE_AGENT", "openhands")
+          path = Path(run_file)
+
+          if not path.exists():
+              print(f"::error::Run file not found: {run_file}")
+              sys.exit(1)
+
+          # Load run using the appropriate adapter
+          if agent_type == "swebench":
+              from agent_triage.harness.swebench_adapter import load_swebench_file
+              runs = load_swebench_file(path)
+          elif agent_type == "aider":
+              from agent_triage.harness.aider_adapter import load_aider_file
+              runs = load_aider_file(path)
+          elif agent_type == "autocoderover":
+              from agent_triage.harness.autocoderover_adapter import load_autocoderover_file
+              runs = load_autocoderover_file(path)
+          else:
+              from agent_triage.harness.openhands_adapter import load_openhands_file
+              runs = load_openhands_file(path)
+
+          from agent_triage.engine.classifier import TriageClassifier
+          from agent_triage.llm.provider import default_provider
+
+          classifier = TriageClassifier(provider=default_provider())
+          cards = [classifier.classify(r) for r in runs]
+
+          # Write cards to output file
+          out = Path("triage_results.jsonl")
+          with out.open("w") as f:
+              for card in cards:
+                  f.write(card.model_dump_json() + "\n")
+
+          # Build summary
+          from collections import Counter
+          dist = Counter(c.primary_category for c in cards)
+          lines = [
+              f"## Agent Triage Results",
+              f"",
+              f"**{len(cards)} run(s) classified** | Agent: `{agent_type}`",
+              f"",
+              f"| Category | Count |",
+              f"|----------|-------|",
+          ]
+          for cat, n in dist.most_common():
+              lines.append(f"| `{cat}` | {n} |")
+
+          lines += ["", "### Cards", ""]
+          for card in cards:
+              lines.append(f"<details>")
+              lines.append(f"<summary><strong>{card.task_id}</strong> — <code>{card.primary_category}</code> ({card.confidence:.0%} confidence)</summary>")
+              lines.append(f"")
+              lines.append(card.to_markdown())
+              lines.append(f"</details>")
+              lines.append(f"")
+
+          summary = "\n".join(lines)
+          Path("triage_summary.md").write_text(summary)
+
+          # Set outputs
+          primary = cards[0].primary_category if cards else "UNKNOWN"
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"primary_category={primary}\n")
+              f.write(f"card_count={len(cards)}\n")
+              f.write(f"results_file=triage_results.jsonl\n")
+
+          print(f"Triaged {len(cards)} run(s). Primary: {primary}")
+          PYEOF
+
+      - name: Upload triage results
+        uses: actions/upload-artifact@v4
+        with:
+          name: triage-results
+          path: |
+            triage_results.jsonl
+            triage_summary.md
+          retention-days: 30
+
+      - name: Post PR comment
+        if: ${{ inputs.post_comment == 'true' && github.event_name == 'pull_request' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = fs.readFileSync('triage_summary.md', 'utf8');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: summary,
+            });
+
+      - name: Write job summary
+        run: cat triage_summary.md >> $GITHUB_STEP_SUMMARY

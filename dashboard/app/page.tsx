@@ -44,6 +44,12 @@ export default function Page() {
   const [selected, setSelected] = useState<TriageCard | null>(null);
   const [loaded, setLoaded] = useState(false);
 
+  // filter / search state
+  const [filterCat, setFilterCat] = useState<string>("");
+  const [filterOwner, setFilterOwner] = useState<Owner | "">("");
+  const [filterMinConf, setFilterMinConf] = useState<number>(0);
+  const [search, setSearch] = useState<string>("");
+
   useEffect(() => {
     fetchBatch().then((d) => {
       setData(d);
@@ -79,6 +85,20 @@ export default function Page() {
     if (!data) return [];
     return Object.keys(data.owner_distribution) as Owner[];
   }, [data]);
+
+  const filteredCards = useMemo(() => {
+    if (!data) return [];
+    const q = search.toLowerCase().trim();
+    return data.cards.filter((c) => {
+      if (filterCat && c.primary_category !== filterCat) return false;
+      if (filterOwner && CATEGORY_OWNER[c.primary_category] !== filterOwner) return false;
+      if (c.confidence < filterMinConf) return false;
+      if (q && !c.task_id.toLowerCase().includes(q) &&
+          !c.run_id.toLowerCase().includes(q) &&
+          !c.root_cause.toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }, [data, filterCat, filterOwner, filterMinConf, search]);
 
   return (
     <>
@@ -214,10 +234,62 @@ export default function Page() {
           <div className="section-head">
             <span className="section-num">03</span>
             <h2>Triaged runs</h2>
-            <span className="hint">click a card for evidence + playbook</span>
+            <span className="hint">
+              {filteredCards.length} of {data?.count ?? 0} — click a card for evidence + playbook
+            </span>
           </div>
+
+          <div className="filters">
+            <input
+              className="filter-search"
+              type="search"
+              placeholder="Search task ID, run ID, or root cause..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            <select
+              className="filter-select"
+              value={filterCat}
+              onChange={(e) => setFilterCat(e.target.value)}
+            >
+              <option value="">All categories</option>
+              {CATEGORY_ORDER.map((cat) => (
+                <option key={cat} value={cat}>{CATEGORY_LABEL[cat]}</option>
+              ))}
+            </select>
+            <select
+              className="filter-select"
+              value={filterOwner}
+              onChange={(e) => setFilterOwner(e.target.value as Owner | "")}
+            >
+              <option value="">All owners</option>
+              {(Object.keys(OWNER_LABELS) as Owner[]).map((o) => (
+                <option key={o} value={o}>{OWNER_LABELS[o]}</option>
+              ))}
+            </select>
+            <label className="filter-conf">
+              <span>Conf &ge;{Math.round(filterMinConf * 100)}%</span>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.05}
+                value={filterMinConf}
+                onChange={(e) => setFilterMinConf(parseFloat(e.target.value))}
+              />
+            </label>
+            {(filterCat || filterOwner || filterMinConf > 0 || search) ? (
+              <button
+                className="filter-reset"
+                onClick={() => { setFilterCat(""); setFilterOwner(""); setFilterMinConf(0); setSearch(""); }}
+              >
+                Clear filters
+              </button>
+            ) : null}
+          </div>
+
           <div className="cards">
-            {data?.cards.map((card) => {
+            {filteredCards.map((card) => {
               const owner = CATEGORY_OWNER[card.primary_category];
               const color = OWNER_COLORS[owner];
               return (
