@@ -28,6 +28,14 @@ data/traces/real_*.jsonl
 data/gold/real_*.jsonl
 output.jsonl
 
+# SQLite local database (persisted in Render at /data/triage.db)
+triage.db
+
+# batch run outputs (large, not code)
+data/traces/run_*/
+data/traces/bash_runs.jsonl
+data/traces/run_with_bash/
+
 # openhands workspace (large embedded repo, not part of the package)
 openhands-eval/
 

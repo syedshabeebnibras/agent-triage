@@ -33,14 +33,13 @@ import time
 from datetime import UTC, datetime
 from pathlib import Path
 
-from pydantic import Field as _Field
-
 from openhands.sdk import Action as _Action
 from openhands.sdk import Observation as _Observation
 from openhands.sdk import register_tool as _register_tool
 from openhands.sdk.tool import ToolAnnotations as _ToolAnnotations
 from openhands.sdk.tool import ToolDefinition as _ToolDefinition
 from openhands.sdk.tool import ToolExecutor as _ToolExecutor
+from pydantic import Field as _Field
 
 # Mutable container so _BashExecutor can read the current workspace path
 _bash_cwd: list[str] = []  # NOTE: not thread-safe — the run loop must remain sequential
@@ -126,10 +125,12 @@ def _run_instance(
     api_key: str,
     max_turns: int,
     output_file: Path,
+    extra_tools: list | None = None,
 ) -> bool:
     """Run one SWE-bench instance and write events to output_file as JSONL."""
     from openhands.sdk import LLM, Agent, LocalConversation, LocalWorkspace
     from openhands.sdk.event.base import Event
+    from openhands.sdk.tool import Tool
 
     llm = LLM(
         model=model,
@@ -137,7 +138,7 @@ def _run_instance(
         timeout=180,
         num_retries=3,
     )
-    agent = Agent(llm=llm)
+    agent = Agent(llm=llm, tools=[Tool(name=t) for t in (extra_tools or [])])
 
     events: list[dict] = []
 
@@ -189,8 +190,10 @@ def _run_instance(
 
 def main(args: argparse.Namespace) -> None:
     api_key = _check_api_key()
+    extra_tools: list[str] = []
     if args.with_bash:
         _register_tool("bash", _BashTool)
+        extra_tools.append("bash")
         print("BashTool registered — agent can now run shell commands")
     model = args.model
     max_turns = args.max_turns
@@ -236,7 +239,7 @@ def main(args: argparse.Namespace) -> None:
         print(f"[{i}/{len(instances)}] {iid} ...", end=" ", flush=True)
         t0 = time.monotonic()
         try:
-            _run_instance(inst, model, api_key, max_turns, out_file)
+            _run_instance(inst, model, api_key, max_turns, out_file, extra_tools)
             elapsed = round(time.monotonic() - t0, 1)
             print(f"done ({elapsed}s)")
             succeeded += 1

@@ -205,6 +205,78 @@ def from_openhands(
     )
 
 
+def _extract_text(val: Any) -> str:
+    """Extract plain text from a string or a list of Anthropic-style content blocks."""
+    if isinstance(val, str):
+        return val
+    if isinstance(val, list):
+        parts = [
+            block.get("text", "") if isinstance(block, dict) else str(block)
+            for block in val
+            if not isinstance(block, dict) or block.get("type") != "tool_use"
+        ]
+        return " ".join(p for p in parts if p).strip()
+    return ""
+
+
+def _normalize_sdk_event(event: dict[str, Any]) -> dict[str, Any]:
+    """Flatten an OpenHands SDK event into the flat action/observation shape the adapter expects."""
+    action_val = event.get("action")
+    if isinstance(action_val, dict):
+        kind = action_val.get("kind", "")
+        normalized_type = kind.replace("Action", "").lower() if kind.endswith("Action") else kind.lower()
+        out = dict(event)
+        out["action"] = normalized_type
+        # thought and message on the event itself may be content-block lists — flatten them
+        for key in ("thought", "message"):
+            if key in out:
+                out[key] = _extract_text(out[key])
+            elif key in action_val:
+                out[key] = _extract_text(action_val[key])
+        return out
+    obs_val = event.get("observation")
+    if obs_val is not None and not isinstance(obs_val, str):
+        out = dict(event)
+        out["observation"] = obs_val.get("content", str(obs_val)) if isinstance(obs_val, dict) else str(obs_val)
+        return out
+    return event
+
+
+def load_sdk_traces(
+    directory: str | Path,
+) -> list[AgentRun]:
+    """Load all SDK-format JSONL traces from a run directory into AgentRuns.
+
+    Handles the OpenHands SDK event shape (action as dict with 'kind' field)
+    which differs from the CLI event format the adapter was originally built for.
+    """
+    directory = Path(directory)
+    runs: list[AgentRun] = []
+    for path in sorted(directory.glob("*.jsonl")):
+        if path.name == "metadata.json":
+            continue
+        with open(path) as f:
+            data = json.loads(f.read())
+        instance_id = data.get("instance_id", path.stem)
+        raw_events = data.get("events") or []
+        normalized_events = [_normalize_sdk_event(e) for e in raw_events]
+        spec = TaskSpec(
+            task_id=instance_id,
+            source="swe-bench",
+            repo=data.get("repo"),
+            problem_statement=data.get("problem_statement", ""),
+        )
+        run = from_openhands(
+            normalized_events,
+            run_id=data.get("run_id") or f"sdk-{instance_id}",
+            task=spec,
+            model=data.get("model"),
+            resolved=data.get("resolved"),
+        )
+        runs.append(run)
+    return runs
+
+
 def load_openhands_output(
     path: str | Path,
     *,
