@@ -257,8 +257,8 @@ def triage_cards() -> dict:
                     cards_raw.append(json.loads(line))
                 except json.JSONDecodeError:
                     pass
-    dist: Counter[str] = Counter(c["primary_category"] for c in cards_raw)
-    owners: Counter[str] = Counter(c["owner"] for c in cards_raw)
+    dist: Counter[str] = Counter(c.get("primary_category", "UNKNOWN") for c in cards_raw)
+    owners: Counter[str] = Counter(c.get("owner", "unknown") for c in cards_raw)
     return {
         "count": len(cards_raw),
         "cards": cards_raw,

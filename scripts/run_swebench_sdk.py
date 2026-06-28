@@ -43,7 +43,7 @@ from openhands.sdk.tool import ToolDefinition as _ToolDefinition
 from openhands.sdk.tool import ToolExecutor as _ToolExecutor
 
 # Mutable container so _BashExecutor can read the current workspace path
-_bash_cwd: list[str] = []
+_bash_cwd: list[str] = []  # NOTE: not thread-safe — the run loop must remain sequential
 
 
 class _BashAction(_Action):
@@ -70,7 +70,7 @@ class _BashExecutor(_ToolExecutor):
             )
             prefix = f"[exit: {result.returncode}]\n"
             out = prefix + (result.stdout or "") + (result.stderr or "")
-            return _BashObservation.from_text(out[:4000] or "(no output)")
+            return _BashObservation.from_text(out[:4000])
         except subprocess.TimeoutExpired:
             return _BashObservation.from_text("Error: command timed out after 60s")
         except Exception as exc:
