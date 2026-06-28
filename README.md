@@ -46,7 +46,8 @@ modes dominate? what share is escalate-to-eng vs educate-the-user?).
                                                                   ▼
                                                           TriageCard (category,
                                                           confidence, evidence,
-                                                          owner, action, prevention)
+                                                          owner, action, prevention,
+                                                          fix_suggestion)
                                                                   ▼
                                   FastAPI  ◄──────────────────────┤
                                   Next.js dashboard  ◄────────────┘
@@ -138,9 +139,10 @@ the adapter, hand-label a gold set, and run calibration.
 pytest --cov=agent_triage
 ```
 
-32 tests covering schema contracts, taxonomy integrity, deterministic signals,
+43 tests covering schema contracts, taxonomy integrity, deterministic signals,
 the classifier pipeline, evaluation math (kappa verified against known values),
-the API, and the OpenHands adapter.
+the API, the OpenHands adapter, the SWE-bench adapter, and confidence calibration.
+ruff clean, mypy 0 errors.
 
 ## Project layout
 
@@ -151,16 +153,22 @@ src/agent_triage/
   engine/
     signals.py             deterministic signal extraction + rule shortcut
     compaction.py          evidence-dense trace compaction
-    card.py                TriageCard output schema
-    classifier.py          the triage pipeline
+    card.py                TriageCard output schema (incl. fix_suggestion)
+    classifier.py          the triage pipeline + few-shot LLM prompt
   llm/provider.py          model-agnostic provider layer (+ offline mock)
-  harness/openhands_adapter.py   OpenHands → AgentRun
-  eval/                    gold set, metrics (kappa, F1, CIs), runner
-  api/app.py               FastAPI service
+  harness/
+    openhands_adapter.py   OpenHands → AgentRun
+    swebench_adapter.py    SWE-agent → AgentRun
+  eval/
+    metrics.py             kappa, F1, bootstrap CIs
+    calibration.py         Platt scaling + ECE/MCE reliability report
+  api/app.py               FastAPI service (incl. /stats/trend, request logging)
   cli.py                   Typer CLI
 dashboard/                 Next.js + TypeScript dashboard (Vercel)
-scripts/generate_fixtures.py
-docs/                      runbook, design notes
+scripts/
+  generate_fixtures.py
+  cluster_other.py         TF-IDF clustering of OTHER bucket → taxonomy candidates
+docs/                      runbook, design notes, teardown writeup
 ```
 
 ## License

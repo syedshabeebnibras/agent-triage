@@ -41,20 +41,22 @@ deterministic signal extraction
                                                     agent_framework / model)
                                            · recommended_action
                                            · prevention (class-level)
+                                           · fix_suggestion (scaffold-level fix)
                                                              │
                                               ┌──────────────┴──────────────┐
                                               ▼                             ▼
                                     FastAPI (Render)              Next.js dashboard
                                     /triage · /batch              (Vercel, live at
                                     /triage/demo · /stats          dashboard-livid-
-                                    bearer-token auth              phi-21.vercel.app)
+                                    /stats/trend (batch history)   phi-21.vercel.app)
+                                    bearer-token auth
 ```
 
 **Stack:** Python 3.12 · FastAPI · Pydantic · Typer CLI · Next.js 16 · TypeScript ·
 Docker · GitHub Actions (ruff + mypy + pytest) · Anthropic Claude (model-agnostic
 provider layer — swappable).
 
-**Tests:** 32, coverage 78%. CI runs on every push.
+**Tests:** 43, all passing. ruff clean, mypy 0 errors. CI runs on every push.
 
 ## 3. The honest result
 
@@ -160,18 +162,32 @@ note, so the triage output is directly actionable without further summarization.
   have occurred. With zero patches in the batch, those categories are
   underrepresented and the IMPLEMENTATION\_STALL rule never had a competing signal.
 
-**Next steps:**
+**Shipped improvements (post-initial-prototype):**
+
+- **`fix_suggestion` on every card.** All 10 taxonomy categories now carry a
+  concrete scaffold-level fix string — e.g. IMPLEMENTATION\_STALL: "gate `finish`
+  on at least one FILE\_EDIT having been observed; inject a forced prompt after N
+  exploration-only turns." Returned on every card, surfaced in the dashboard modal.
+- **Few-shot LLM prompt.** Five labeled examples anchor the hardest-to-distinguish
+  pairs (CONTEXT\_RETRIEVAL vs REASONING, TOOL\_USE vs ENVIRONMENT, IMPLEMENTATION\_STALL
+  vs RESOURCE\_LIMIT) directly in the system prompt.
+- **SWE-agent adapter.** `swebench_adapter.py` normalizes SWE-agent evaluation
+  output into the same `AgentRun` schema, so the engine handles both OpenHands and
+  SWE-agent trajectories without any engine changes.
+- **`/stats/trend` endpoint.** In-memory ring buffer of the last 50 `/triage/batch`
+  calls, returning per-batch category distributions and rule vs LLM split over time.
+- **Confidence calibration module.** `eval/calibration.py` implements Platt scaling
+  (logistic fit via gradient descent) and a text-mode reliability diagram with ECE
+  and MCE, ready to apply once the gold set grows past ~50 runs.
+- **OTHER-bucket clustering.** `scripts/cluster_other.py` applies TF-IDF K-means
+  to OTHER cards to surface candidate new taxonomy categories without manual reading.
+
+**Remaining next steps:**
 
 - Expand to ≥100 runs at full turn budgets across more diverse repos; measure
   inter-annotator agreement on a shared subset.
-- Cluster the OTHER bucket automatically to surface new categories without manual
-  inspection.
-- Add a trend view across run batches over time so a team can see whether
-  reliability is improving.
-- Add a "fix suggestion" pass for agent-framework-owned categories — IMPLEMENTATION\_STALL
-  and VERIFICATION both have known, specific scaffold-level interventions
-  (gate `finish` on having produced at least one edit; require a green test run
-  before allowing exit) that could be returned alongside the triage verdict.
+- Apply confidence calibration once the gold set has ≥50 examples across ≥5
+  categories and report ECE alongside kappa.
 
 ---
 
