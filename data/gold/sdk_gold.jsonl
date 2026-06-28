@@ -1,0 +1,10 @@
+{"run_id": "sdk-astropy__astropy-12907", "task_id": "astropy__astropy-12907", "true_category": "IMPLEMENTATION_STALL", "labeler": "human", "notes": "agent understood the problem but had no file-edit tools"}
+{"run_id": "sdk-astropy__astropy-14182", "task_id": "astropy__astropy-14182", "true_category": "IMPLEMENTATION_STALL", "labeler": "human", "notes": "agent understood the problem but had no file-edit tools"}
+{"run_id": "sdk-astropy__astropy-14365", "task_id": "astropy__astropy-14365", "true_category": "IMPLEMENTATION_STALL", "labeler": "human", "notes": "agent understood the problem but had no file-edit tools"}
+{"run_id": "sdk-astropy__astropy-14995", "task_id": "astropy__astropy-14995", "true_category": "IMPLEMENTATION_STALL", "labeler": "human", "notes": "agent understood the problem but had no file-edit tools"}
+{"run_id": "sdk-astropy__astropy-6938", "task_id": "astropy__astropy-6938", "true_category": "IMPLEMENTATION_STALL", "labeler": "human", "notes": "agent understood the problem but had no file-edit tools"}
+{"run_id": "sdk-astropy__astropy-7746", "task_id": "astropy__astropy-7746", "true_category": "IMPLEMENTATION_STALL", "labeler": "human", "notes": "agent understood the problem but had no file-edit tools"}
+{"run_id": "sdk-django__django-10914", "task_id": "django__django-10914", "true_category": "IMPLEMENTATION_STALL", "labeler": "human", "notes": "agent understood the problem but had no file-edit tools"}
+{"run_id": "sdk-django__django-10924", "task_id": "django__django-10924", "true_category": "IMPLEMENTATION_STALL", "labeler": "human", "notes": "agent understood the problem but had no file-edit tools"}
+{"run_id": "sdk-django__django-11001", "task_id": "django__django-11001", "true_category": "IMPLEMENTATION_STALL", "labeler": "human", "notes": "agent understood the problem but had no file-edit tools"}
+{"run_id": "sdk-django__django-11019", "task_id": "django__django-11019", "true_category": "IMPLEMENTATION_STALL", "labeler": "human", "notes": "agent understood the problem but had no file-edit tools"}
